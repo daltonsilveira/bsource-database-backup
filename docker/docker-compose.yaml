@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  bsource-db-backup:
+    container_name: bsource-db-backup
+    build: .
+    env_file:
+      - .env
+    volumes:
+      # Volume para backups temporários (opcional)
+      - ./app/backups:/tmp
+    restart: unless-stopped
+    # Descomente para usar imagem pré-construída
+    # image: bsourcedev/bsource-db-backup:latest
+    
+    # Configurações de recursos (opcional)
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+        reservations:
+          memory: 256M
+          
+    # networks:
+    #   - bsource-network
+
+# networks:
+#   bsource-network:
+#     name: bsource-network
+#     driver: bridge
+#     external: true
