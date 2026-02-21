@@ -62,7 +62,7 @@ python main.py
 docker-compose up -d
 ```
 
-## 📋 Configurações disponíveis
+## 📋 Variáveis de Ambiente
 
 ### Base de Dados
 
@@ -115,52 +115,6 @@ docker-compose up -d
 
 > **Nota:** Se `SEQ_URL` não estiver definido, apenas logging para console será utilizado.
 
-## 🔧 Desenvolvimento
-
-### Estrutura do projeto:
-```
-├── app/
-│   ├── __init__.py              # Pacote Python
-│   ├── main.py                  # Aplicação principal
-│   ├── db_dumper.py             # Abstração de dump de bases de dados
-│   ├── storage_provider.py      # Abstração de storage providers
-│   ├── email_helper.py          # Auxiliar para emails
-│   ├── requirements.txt         # Dependências Python
-│   └── backups/                 # Backups locais temporários
-├── docker/
-│   ├── docker-compose.yaml      # Configuração Docker
-│   └── Dockerfile               # Imagem Docker
-├── .env.example                 # Exemplo de configuração
-└── .gitignore                   # Arquivos ignorados pelo Git
-```
-
-### Arquitetura:
-
-```
-                    ┌───────────────────┐
-                    │      main.py      │  (scheduler + orquestração)
-                    └─────┬───────┬─────┘
-                          │       │
-              ┌───────────┘       └───────────┐
-              ▼                               ▼
-   ┌─────────────────┐              ┌─────────────────┐
-   │  DatabaseDumper  │ (ABC)       │ StorageProvider  │ (ABC)
-   ├─────────────────┤              ├─────────────────┤
-   │ PostgresDumper   │              │ R2Storage        │
-   │ MySQLDumper      │              │ S3Storage        │
-   │ MSSQLDumper      │              └─────────────────┘
-   └─────────────────┘
-```
-
-### Bases de dados suportadas:
-
-| DB_TYPE | Engine | Ferramenta CLI | Extensão |
-|---------|--------|---------------|----------|
-| `postgres` | PostgreSQL | `pg_dump` | `.sql` |
-| `mysql` | MySQL | `mysqldump` | `.sql` |
-| `mariadb` | MariaDB | `mysqldump` | `.sql` |
-| `mssql` | SQL Server | `sqlcmd` | `.bak` |
-
 ## 🕐 Configuração de Fuso Horário
 
 O sistema suporta configuração de fuso horário através da variável `TIMEZONE`. Por padrão, usa o horário de São Paulo.
@@ -178,12 +132,62 @@ O sistema suporta configuração de fuso horário através da variável `TIMEZON
 - **Logs**: Registram eventos no horário local
 - **Metadados**: Incluem timezone para auditoria
 
-## 📊 Monitoramento
+## 📦 Exemplo de Uso
 
-- Logs estruturados enviados para SEQ (opcional — apenas se `SEQ_URL` for configurado)
-- Logs no console sempre ativos
-- Notificações por email para sucesso/erro com horário local
-- Metadata nos arquivos de backup para auditoria
+### PostgreSQL + Cloudflare R2
+
+```env
+DB_TYPE=postgres
+DB_HOST=db.exemplo.com
+DB_PORT=5432
+DB_USER=backup_user
+DB_PASSWORD=senha_segura
+DB_DATABASE=minha_base
+
+STORAGE_TYPE=r2
+STORAGE_ENDPOINT_URL=https://account-id.r2.cloudflarestorage.com
+STORAGE_ACCESS_KEY_ID=chave_acesso
+STORAGE_SECRET_ACCESS_KEY=chave_secreta
+STORAGE_BUCKET_NAME=meus-backups
+
+CRON_SCHEDULE=0 3 * * *
+```
+
+### MySQL + AWS S3
+
+```env
+DB_TYPE=mysql
+DB_HOST=mysql.exemplo.com
+DB_PORT=3306
+DB_USER=backup_user
+DB_PASSWORD=senha_segura
+DB_DATABASE=minha_base
+
+STORAGE_TYPE=s3
+STORAGE_REGION=us-east-1
+STORAGE_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE
+STORAGE_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+STORAGE_BUCKET_NAME=meus-backups
+
+CRON_SCHEDULE=0 */6 * * *
+```
+
+### SQL Server + Cloudflare R2
+
+```env
+DB_TYPE=mssql
+DB_HOST=sqlserver.exemplo.com
+DB_PORT=1433
+DB_USER=sa
+DB_PASSWORD=senha_segura
+DB_DATABASE=minha_base
+
+STORAGE_TYPE=r2
+STORAGE_ENDPOINT_URL=https://account-id.r2.cloudflarestorage.com
+STORAGE_ACCESS_KEY_ID=chave_acesso
+STORAGE_SECRET_ACCESS_KEY=chave_secreta
+STORAGE_BUCKET_NAME=meus-backups
+```
 
 ## ⚠️ Migração da v2.x para v3.0
 
